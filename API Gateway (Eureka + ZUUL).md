@@ -24,6 +24,7 @@
 2. application.properites 파일에 eureka 서버 관련 설정을 한다.
 
    - ```properties
+     ## properties 파일일 경우
      # application settings
      spring.application.name=Eureka Server
      server.port=${PORT:8080}
@@ -33,6 +34,25 @@
      eureka.client.register-with-eureka=false
      eureka.client.fetch-registry=false
      eureka.server.enable-self-preservation=true
+     
+     
+     ## yml 파일일 경우 (properties 파일 또는 yml 파일 둘 중 하나만 설정하면 됨).
+     # application settings
+     spring:
+       application:
+         name: Eureka Server
+     server:
+       port: 8080
+     
+     # -- Eureka
+     eureka:
+       instance:
+         hostname: localhost
+       client:
+         serviceUrl:
+           defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+         register-with-eureka: false
+         fetch-registry: false
      ```
 
 3. 해당 프로젝트의 Application.java 파일에 @EnableEurekaServer 어노테이션을 추가한다.
@@ -62,7 +82,7 @@
 
    - Eureka Discovery Client
    - Actuator
-   - Spring Web
+   - Spring Web 
    - DevTools
 
 2. application.properties에 eureka client 관련 설정을 추가한다.
@@ -71,15 +91,38 @@
    ################## Application Settings ####################
    
    ##### 여기서 명시한 어플리케이션 이름이 유레카 서버에 Service ID로 등록된다.
+   ## properties 파일
    # 당연히 server와 port는 달라야 한다.
    spring.application.name=Client1
-   server.port=${PORT:8090}
+   server.port=${PORT:8081}
    
    ##### Eureka Server의 url이 들어간다.
    eureka.client.serviceUrl.defaultZone=http://localhost:8080/eureka/
+   
+   ## yml 파일 (properties 파일 과 yml 파일 중 하나만 설정하면 됨)
+   # -- server port
+   server:
+     port: 8081
+   
+   # -- Default spring configuration & Thymeleaf
+   spring:
+     thymeleaf:
+       enabled: true
+       encoding: UTF-8
+       check-template-location: true
+       prefix: classpath:/templates/
+       suffix: .html
+     application:  
+       name: Client1
+   
+   # -- Eureka client
+   eureka:
+     client:
+       serviceUrl:
+         defaultZone: ${EUREKA_URL:http://localhost:8080/eureka/}
    ```
 
-3. controller 및 view를 새로 만든다.(Thymeleaf)
+3. controller 및 view를 새로 만든다.(Thymeleaf 템플릿 엔진 이용)
 
    - ```java
      
@@ -136,6 +179,7 @@
 - ZUUL은 Micro Service를 라우팅하는 과정에서 pre filter, route filter, post filter를 거치고 에러 발생 시, error filter를 거친다.
 - 각 filter는 개발자가 자유롭게 커스터마이징이 가능하며 로깅, 인증, 모니터링 등 목적에 맞게 개발 할 수 있다.
 - 여러 Service의 Port들을 JUUL이 실행되는 Port 하나로 통일해 하나의 서비스로 보이게 할 수 있다.
+- 엄밀히 따지자면 ZUUL 또한 eureka client 중 하나이다.
 - ![ZUUL Request Life Cycle](https://ssipflow.github.io/assets/images/static/180930/Request-Lifecycle.png)
 
 ## ZUUL 생성하기
@@ -189,5 +233,6 @@
 
 7. ZUUL을 통한 Client1의 주소는 (http://[ZUUL Project 주소]/[Client 이름]/[Client의 controller route])이다.
 
-   - ex) : http://localhost:8081/Client1/test 
+   - ex) : http://localhost:8081/client1/test 
+     - 여기서 client1은 application 이름이 아닌 디렉토리명을 따온다.
 
